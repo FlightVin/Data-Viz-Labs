@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q2</title>
+
+    <style>
+        .plotDiv{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #dataText{
+            background-color: antiquewhite;
+            width: 150px;
+            text-align: center;
+            height: 20px;
+        }
+
+        #hoverText {
+            z-index: 100;
+            position: absolute;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="plotDiv">
+        <p>
+            <form id="databuttons">
+            <input type="radio" id="data2011" name="dateInput" checked> 2011
+            <input type="radio" id="data2012" name="dateInput"> 2012
+            <input type="radio" id="data2013" name="dateInput"> 2013
+            </form>
+        </p>
+
+        <p id="dataText"></p>
+
+        <svg width="1000" height="1000">
+
+        </svg>
+    </div>
+
+    <script>   
+        // d3 element
+        const svgElement = d3.select('svg');
+
+        // for radio buttons
+        const radioButtonForm = document.querySelector('form');
+
+        // plotting axes
+        svgElement.append("line")
+            .attr("x1", "100")
+            .attr("y1", "500")
+            .attr("x2", "600")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+        svgElement.append("line")
+            .attr("x1", "100")
+            .attr("y1", "0")
+            .attr("x2", "100")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+
+        // axes names
+        svgElement.append("text")
+            .attr("x", 10)
+            .attr("y", 250)
+            .text("Y Value");
+        svgElement.append("text")
+            .attr("x", 325)
+            .attr("y", 550)
+            .text("X value");
+
+        // plotting ticks on y axis
+        const yFactor = 5;
+        const radFactor = 2.5;
+        for (let i = 0; i<100; i+=5 ){
+            svgElement.append("text")
+                .attr("x", 75)
+                .attr("y", 500-yFactor*i+5)
+                .text(i);
+
+            svgElement.append("line")
+                .attr("x1", "95")
+                .attr("y1", 500-yFactor*i)
+                .attr("x2", "105")
+                .attr("y2", 500-yFactor*i)
+                .attr("stroke", "blue")
+                .attr("stroke-width", "1");
+        }
+
+        for (let i = 0; i<100; i+=5 ){
+            svgElement.append("text")
+                .attr("x", 100+yFactor*i-5)
+                .attr("y", 517)
+                .text(i);
+
+            svgElement.append("line")
+                .attr("x1", 100+yFactor*i)
+                .attr("y1", 505)
+                .attr("x2", 100+yFactor*i)
+                .attr("y2", 495)
+                .attr("stroke", "blue")
+                .attr("stroke-width", "1");
+        }
+
+        // initial render for 2011
+        const dataTextObj = document.querySelector('#dataText');
+        var curDate = 2011;
+        dataTextObj.innerHTML = "Plot for " + curDate;
+
+        // plotting coordinates
+        const xCoordParam = 'X' + curDate;
+        const yCoordParam = 'Y' + curDate;
+        const rParam = 'R' + curDate;
+
+        var dataArray = [];
+        // loading data
+        var curDist = 130;
+        d3.csv('https://raw.githubusercontent.com/FlightVin/Data-Viz-Labs/main/lab1/data/yearwise.csv', (data) => {
+            console.log(data);
+            dataArray.push(data);
+        }).then(() => {
+
+            dataArray.forEach((data) => {
+                // plotting bar (using X values)
+                svgElement.append("circle")
+                    .attr("cx", data[xCoordParam]*yFactor+100)
+                    .attr("cy", 500 - data[yCoordParam]*yFactor)
+                    .attr("r", data[rParam]*radFactor)
+                    .attr("fill", "blue")
+                    .attr("class", "plotBar")
+                    .attr("id", 'X:'+data[xCoordParam]+'-'+'Y:'+data[yCoordParam]+'-'+'R:'+data[rParam]+'-'+data['Name']);
+
+                curDist += 50 + 30;
+            });       
+            
+            const barArray = document.querySelectorAll(".plotBar");
+            
+            console.log(barArray);
+
+            // adding hover events
+            barArray.forEach(bar => {
+                bar.addEventListener("mouseover", () => {
+                    console.log("Overbar for", bar.id);
+                    bar.setAttribute("fill", "red");
+
+                    const newElement = document.createElement("div");
+                    newElement.innerHTML = bar.id;
+                    newElement.id="hoverText";
+                    document.body.append(newElement);
+                });
+
+                document.addEventListener("mouseout", () => {
+                    bar.setAttribute("fill", "blue");
+                    const hoverElement = document.querySelector("#hoverText");
+                    if (hoverElement){
+                        hoverElement.remove();
+                    }
+                });
+            });
+
+            // for mouse move
+            document.addEventListener('mousemove', (event) => {
+                const hoverElement = document.querySelector("#hoverText");
+                if (hoverElement){
+                    hoverElement.style.left = event.pageX + 15 + 'px';
+                    hoverElement.style.top = event.pageY + 'px';
+                }
+            });
+
+            // event listener
+            radioButtonForm.addEventListener('change', () => {
+                const radio2011 = document.querySelector('#data2011').checked;
+                const radio2012 = document.querySelector('#data2012').checked;
+
+                if (radio2011){
+                    curDate = 2011;
+                } else if (radio2012){
+                    curDate = 2012;
+                } else {
+                    curDate = 2013; 
+                }
+
+                // setting top level task
+                const dataTextObj = document.querySelector('#dataText');
+                dataTextObj.innerHTML = "Plot for " + curDate;
+
+                // plotting coordinates
+                const xCoordParam = 'X' + curDate;
+                const yCoordParam = 'Y' + curDate;
+                const rParam = 'R' + curDate;
+
+                console.log("Plotting for", curDate);   
+
+                // plotting data
+                var curDist = 130;
+                for (let i = 0; i<barArray.length; i++){
+                    const bar = barArray[i];
+                    bar.setAttribute("cx", dataArray[i][xCoordParam]*yFactor+100)
+                    bar.setAttribute("cy", 500 - dataArray[i][yCoordParam]*yFactor)
+                    bar.setAttribute("r", dataArray[i][rParam]*radFactor)
+                    bar.setAttribute("id", 'X:'+dataArray[i][xCoordParam]+'-'+'Y:'+dataArray[i][yCoordParam]+'-'+'R:'+dataArray[i][rParam]+'-'+dataArray[i]['Name']);
+                }; 
+            })
+
+        }); 
+    </script>
+</body>
+</html>

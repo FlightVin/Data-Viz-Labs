@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q4</title>
+
+    <style>
+        .plotDiv{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #dataText{
+            background-color: antiquewhite;
+            width: 150px;
+            text-align: center;
+            height: 20px;
+        }
+
+        #hoverText {
+            z-index: 100;
+            position: absolute;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="plotDiv">
+        <p id="dataText">Part 1</p>
+
+        <svg width="1000" height="600" id="part1">
+
+        </svg>
+
+        <p id="dataText">Part 2</p>
+
+        <svg width="1000" height="50" id="part3">
+
+        </svg>
+
+        <svg width="1000" height="600" id="part2">
+
+        </svg>
+    </div>
+
+    <script>   
+        // d3 elements
+        const svgElement1 = d3.select('#part1');
+        const svgElement2 = d3.select('#part2');
+        const svgElement3 = d3.select('#part3');
+
+        // PART 1
+        // plotting axes
+        svgElement1.append("line")
+            .attr("x1", "100")
+            .attr("y1", "500")
+            .attr("x2", "950")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+        svgElement1.append("line")
+            .attr("x1", "100")
+            .attr("y1", "0")
+            .attr("x2", "100")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+
+        // axes names
+        svgElement1.append("text")
+            .attr("x", 20)
+            .attr("y", 250)
+            .text("Number");
+        svgElement1.append("text")
+            .attr("x", 500)
+            .attr("y", 550)
+            .text("race_ethnicity");
+
+        // plotting ticks on y axis
+        const yFactor = 1;
+        for (let i = 0; i<500; i+=25 ){
+            svgElement1.append("text")
+                .attr("x", 75)
+                .attr("y", 500-yFactor*i+5)
+                .text(i);
+
+            svgElement1.append("line")
+                .attr("x1", "95")
+                .attr("y1", 500-yFactor*i)
+                .attr("x2", "105")
+                .attr("y2", 500-yFactor*i)
+                .attr("stroke", "blue")
+                .attr("stroke-width", "1");
+        }
+
+        // PART 2
+        // plotting axes
+        svgElement2.append("line")
+            .attr("x1", "100")
+            .attr("y1", "500")
+            .attr("x2", "950")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+        svgElement2.append("line")
+            .attr("x1", "100")
+            .attr("y1", "0")
+            .attr("x2", "100")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+
+        // axes names
+        svgElement2.append("text")
+            .attr("x", 0)
+            .attr("y", 250)
+            .text("Percentage");
+        svgElement2.append("text")
+            .attr("x", 500)
+            .attr("y", 550)
+            .text("Award");
+
+        // plotting ticks on y axis
+        const yFactor2 = 5;
+        for (let i = 0; i<100; i+=5 ){
+            svgElement2.append("text")
+                .attr("x", 75)
+                .attr("y", 500-yFactor2*i+5)
+                .text(i);
+
+            svgElement2.append("line")
+                .attr("x1", "95")
+                .attr("y1", 500-yFactor2*i)
+                .attr("x2", "105")
+                .attr("y2", 500-yFactor2*i)
+                .attr("stroke", "blue")
+                .attr("stroke-width", "1");
+        }
+
+        var dataArray = [];
+        // loading data
+        var curDist = 130;
+        d3.csv('https://raw.githubusercontent.com/FlightVin/Data-Viz-Labs/main/lab1/data/oscar_demographics.csv', (data) => {
+            // console.log(data);
+            dataArray.push(data);
+        }).then(() => {
+            // part 1
+            const raceSet = new Set();
+            dataArray.forEach(ele => {
+                raceSet.add(ele.race_ethnicity);
+            })
+
+            const raceData = [];
+            raceSet.forEach(ele => {
+                raceData.push({'name': ele, 'num': 0});
+            });
+
+            // counting instances
+            dataArray.forEach(ele => {
+                raceData.forEach(raceEle => {
+                    if (raceEle['name'] === ele.race_ethnicity){
+                        raceEle['num']++;
+                    }
+                })
+            })
+
+            // plotting data
+            var curDist = 130;
+            // console.log(raceData);
+            raceData.forEach((race) => {
+                // plotting bar (using X values)
+                svgElement1.append("rect")
+                    .attr("x", curDist)
+                    .attr("y", 500 - race['num']*yFactor)
+                    .attr("height", race['num']*yFactor)
+                    .attr("width", 50)
+                    .attr("fill", "blue")
+                    .attr("class", "plotBar");
+
+                // adding names
+                svgElement1.append("text")
+                    .attr("x", curDist)
+                    .attr("y", 521)
+                    .text(race['name']);
+
+                curDist += 100 + 30;
+            });    
+
+            // part 2
+            const awardSet = new Set();
+            dataArray.forEach(ele => {
+                awardSet.add(ele.award);
+            })
+
+            const awardArray = [];
+            awardSet.forEach(ele => {
+                awardArray.push({'award':ele, 'num': [
+                ]});
+            })
+
+            // adding individual numbers
+            awardArray.forEach(ele => {
+                raceSet.forEach(raceName => {
+                    if (raceName !== 'White'){
+                        ele['num'].push({
+                            'race': raceName,
+                            'num': 0,
+                        })
+                    }
+                })
+            })
+
+            // counting numbers
+            dataArray.forEach(ele => {
+                awardArray.forEach(awardEle => {
+                    if (awardEle['award'] === ele.award){
+                        awardEle['num'].forEach(numEle => {
+                            if (ele.race_ethnicity === numEle['race']){
+                                numEle['num']++;
+                            }
+                        })
+                    }
+                })
+            })
+
+            const colorArray = [
+                'red',
+                'blue',
+                'lightblue',
+                'orange',
+                'yellow',
+            ]
+
+            // summing up numbers
+            awardArray.forEach(ele => {
+                ele.tot_num = 0;
+                ele['num'].forEach(numEle => {
+                    ele.tot_num += numEle['num'];
+                })
+            })
+            
+            // drawing index
+            raceArray = [];
+            awardArray[0]['num'].forEach(ele => {
+                raceArray.push(ele['race']);
+            })
+            var curDist = 150;
+            for (let i = 0; i<5; i++){
+                // adding names
+                svgElement3.append("text")
+                    .attr("x", curDist+25)
+                    .attr("y", 15)
+                    .text(raceArray[i]);
+
+                // adding colors
+                svgElement3.append("rect")
+                        .attr("x", curDist)
+                        .attr("y", 0)
+                        .attr("height", 20)
+                        .attr("width", 20)
+                        .attr("fill", colorArray[i])
+                        .attr("class", "plotBar");
+                curDist += 150;
+            }
+
+            console.log(awardArray);
+            // plotting data
+            var curDist = 150;
+            // console.log(raceData);
+            awardArray.forEach((ele) => {
+                // plotting bars
+                var topDist = 0;
+                for (let i = 0; i<5; i++){
+                    var height = 100*yFactor2*ele['num'][i]['num']/ele.tot_num;
+                    svgElement2.append("rect")
+                        .attr("x", curDist)
+                        .attr("y", 500 - height - topDist)
+                        .attr("height", height)
+                        .attr("width", 50)
+                        .attr("fill", colorArray[i])
+                        .attr("class", "plotBar");
+                    topDist += height;
+                }
+
+                // adding names
+                svgElement2.append("text")
+                    .attr("x", curDist-10)
+                    .attr("y", 521)
+                    .text(ele['award']);
+
+                curDist += 120 + 30;
+            }); 
+        }); 
+
+
+    </script>
+</body>
+</html>

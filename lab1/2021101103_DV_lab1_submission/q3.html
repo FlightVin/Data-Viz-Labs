@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q3</title>
+
+    <style>
+        .plotDiv{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="plotDiv">
+        <p id="dataText">Line Graph</p>
+
+        <svg width="1000" height="1000">
+
+        </svg>
+    </div>
+
+    <script>   
+        // d3 element
+        const svgElement = d3.select('svg');
+
+        // plotting axes
+        svgElement.append("line")
+            .attr("x1", "100")
+            .attr("y1", "500")
+            .attr("x2", "900")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+        svgElement.append("line")
+            .attr("x1", "100")
+            .attr("y1", "0")
+            .attr("x2", "100")
+            .attr("y2", "500")
+            .attr("stroke", "red")
+            .attr("stroke-width", "2");
+
+        // axes names
+        svgElement.append("text")
+            .attr("x", 5)
+            .attr("y", 250)
+            .text("Rate");
+        svgElement.append("text")
+            .attr("x", 450)
+            .attr("y", 555)
+            .text("Year");
+
+        // plotting ticks on y axis
+        const yFactor = 5;
+        const radFactor = 2.5;
+        for (let i = 0; i<100; i+=5 ){
+            svgElement.append("text")
+                .attr("x", 70)
+                .attr("y", 500-yFactor*i+5)
+                .text(i/10);
+
+            svgElement.append("line")
+                .attr("x1", "95")
+                .attr("y1", 500-yFactor*i)
+                .attr("x2", "105")
+                .attr("y2", 500-yFactor*i)
+                .attr("stroke", "blue")
+                .attr("stroke-width", "1");
+        }
+
+        const incrementalDist = 6;
+        for (let i = 0; i<=10; i+=1 ){
+            svgElement.append("text")
+                .attr("x", 100+incrementalDist*6+i*incrementalDist*12)
+                .attr("y", 517)
+                .text(i+2005);
+        }
+
+        var dataArray = [];
+        // loading data
+        var curDist = 100+incrementalDist;
+        d3.csv('https://raw.githubusercontent.com/FlightVin/Data-Viz-Labs/main/lab1/data/unemployment.csv', (data) => {
+            dataArray.push({'value':data['rate']*yFactor*10, 'disp':curDist});
+            curDist += incrementalDist;
+        }).then(() => {
+
+            const growthMillis = 3000;
+            const numGrowths = 1000;
+
+            var lineInterval = setInterval(displayLine, growthMillis/numGrowths);
+            var curGrowth = 0;
+
+            svgElement.append("path")
+                .datum(dataArray)
+                .attr("fill", "none")
+                .attr("stroke", "blue")
+                .attr("stroke-width", 1.5)
+                .attr("d", d3.line()
+                    .x(function(d) { return d.disp })
+                    .y(function(d) { return 500 - d.value*curGrowth/numGrowths })
+                )
+                .attr('id', 'linePlot')
+
+            function displayLine(){
+                curGrowth++;
+                document.querySelector('#linePlot').remove();
+
+                svgElement.append("path")
+                    .datum(dataArray)
+                    .attr("fill", "none")
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(function(d) { return d.disp })
+                        .y(function(d) { return 500 - d.value*curGrowth/numGrowths })
+                    )
+                    .attr('id', 'linePlot')
+
+                if (numGrowths === curGrowth){
+                    clearInterval(lineInterval);
+                    lineInterval = null;
+                }
+            }
+
+        }); 
+    </script>
+</body>
+</html>
